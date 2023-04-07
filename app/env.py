@@ -22,3 +22,5 @@ USE_SLACK_LANGUAGE = os.environ.get("USE_SLACK_LANGUAGE", "true") == "true"
 SLACK_APP_LOG_LEVEL = os.environ.get("SLACK_APP_LOG_LEVEL", "DEBUG")
 
 TRANSLATE_MARKDOWN = os.environ.get("TRANSLATE_MARKDOWN", "false") == "true"
+
+SLACK_CHANNEL_ID = os.environ.get("SLACK_CHANNEL_ID", None)

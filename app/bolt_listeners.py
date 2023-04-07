@@ -10,6 +10,7 @@ from app.env import (
     OPENAI_TIMEOUT_SECONDS,
     SYSTEM_TEXT,
     TRANSLATE_MARKDOWN,
+    SLACK_CHANNEL_ID
 )
 from app.i18n import translate
 from app.openai_ops import (
@@ -35,6 +36,21 @@ TIMEOUT_ERROR_MESSAGE = (
 )
 DEFAULT_LOADING_TEXT = ":hourglass_flowing_sand: Wait a second, please ..."
 
+def redirectToChannel(
+        context: BoltContext,
+        payload: dict,
+        client: WebClient,
+):    
+    if SLACK_CHANNEL_ID is None:
+        return False        
+    if context.channel_id != SLACK_CHANNEL_ID:
+            client.chat_postMessage(
+                channel=context.channel_id,
+                thread_ts=payload["ts"],
+                text="Please ask your question here <#" + SLACK_CHANNEL_ID + ">",
+            )
+            return True
+    return False
 
 def start_convo(
     context: BoltContext,
@@ -45,6 +61,9 @@ def start_convo(
     wip_reply = None
     try:
         if payload.get("thread_ts") is not None:
+            return
+        
+        if redirectToChannel(context, payload, client):
             return
 
         openai_api_key = context.get("OPENAI_API_KEY")
@@ -160,6 +179,9 @@ def reply_if_necessary(
             and payload.get("bot_id") != context.bot_id
         ):
             # Skip a new message by a different app
+            return
+
+        if redirectToChannel(context, payload, client):
             return
 
         openai_api_key = context.get("OPENAI_API_KEY")
