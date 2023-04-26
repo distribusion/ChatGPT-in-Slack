@@ -12,11 +12,11 @@ from slack_bolt import BoltContext
 from slack_sdk.web import WebClient
 
 from app.markdown import slack_to_markdown, markdown_to_slack
-from app.reply import update_wip_message
+from app.slack_ops import update_wip_message
 
-#
+# ----------------------------
 # Internal functions
-#
+# ----------------------------
 
 MAX_TOKENS = 1024
 GPT_3_5_TURBO_0301_MODEL = "gpt-3.5-turbo-0301"
@@ -213,6 +213,9 @@ def format_assistant_reply(content: str, translate_markdown: bool) -> str:
         ("```\\s*[Mm]atlab\n", "```\n"),
         ("```\\s*[Jj][Ss][Oo][Nn]\n", "```\n"),
         ("```\\s*[Ll]a[Tt]e[Xx]\n", "```\n"),
+        ("```\\s*bash\n", "```\n"),
+        ("```\\s*zsh\n", "```\n"),
+        ("```\\s*sh\n", "```\n"),
         ("```\\s*[Ss][Qq][Ll]\n", "```\n"),
         ("```\\s*[Pp][Hh][Pp]\n", "```\n"),
         ("```\\s*[Pp][Ee][Rr][Ll]\n", "```\n"),
@@ -227,3 +230,13 @@ def format_assistant_reply(content: str, translate_markdown: bool) -> str:
         content = markdown_to_slack(content)
 
     return content
+
+
+def build_system_text(
+    system_text_template: str, translate_markdown: bool, context: BoltContext
+):
+    system_text = system_text_template.format(bot_user_id=context.bot_user_id)
+    # Translate format hint in system prompt
+    if translate_markdown is True:
+        system_text = slack_to_markdown(system_text)
+    return system_text
